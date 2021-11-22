@@ -211,6 +211,43 @@ class Game:
         return dict_
 
 
+class Automaton:
+    def __init__(self, num_states, num_props):
+        pass
+
+    def reset_bdds(self):
+        pass
+
+    def add_state(self, uid):
+        pass
+
+    def add_prop(self, pid):
+        pass
+
+    def add_trans(self, uid, sigma, vid):
+        """ sigma is a binary formula over `bdd_prop` representing the sigma. """
+        pass
+
+    def make_final(self, uid):
+        pass
+
+    def is_valid_state(self, uid):
+        pass
+
+    def is_valid_prop(self, pid):
+        pass
+
+    def is_valid_trans(self, uid, sigma, vid):
+        pass
+
+    def is_final_state(self, uid):
+        pass
+
+
+def product(game, aut):
+    pass
+
+
 def demo():
     # Instantiate game with max number of states and max number of actions
     game = Game(num_states=4, num_actions=4)
