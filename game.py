@@ -65,7 +65,7 @@ class Game:
 
         # Represent uid as expression using bit variables
         aid_expr = self._aid2expr(aid)
-        logger.info(f"aid: {aid}, expr: {aid_expr}")
+        logger.debug(f"aid: {aid}, expr: {aid_expr}")
 
         # Update action validity expression
         f = self.bdd_actions.add_expr(aid_expr)
@@ -83,10 +83,10 @@ class Game:
         aid_expr = self._aid2expr(aid)
         trans_expr = " & ".join([uid_expr, aid_expr, vid_expr])
 
-        logger.info(f"uid: {uid}, uid_expr: {uid_expr}")
-        logger.info(f"vid: {vid}, vid_expr: {vid_expr}")
-        logger.info(f"aid: {aid}, aid_expr: {aid_expr}")
-        logger.info(f"trans_expr: {trans_expr}")
+        logger.debug(f"uid: {uid}, uid_expr: {uid_expr}")
+        logger.debug(f"vid: {vid}, vid_expr: {vid_expr}")
+        logger.debug(f"aid: {aid}, aid_expr: {aid_expr}")
+        logger.debug(f"trans_expr: {trans_expr}")
 
         # Update state validity expression
         f = self.bdd_trans.add_expr(trans_expr)
