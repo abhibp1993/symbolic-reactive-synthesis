@@ -2,6 +2,7 @@ import networkx as nx
 
 import game
 import logging
+import numpy as np
 logger = logging.getLogger(__name__)
 
 
@@ -62,8 +63,35 @@ class GridworldNx:
     def _construct_gridworld(self):
         # Add states
         # Add edges based on connectivity
-        pass
+        statelist = []
+        for i in range(self.rows):
+            for j in range(self.cols):
+                statelist.append((i, j))
+                st_id = i * self.rows + j
+                self.graph.add_node(st_id)
+        
+        if self.conn == 4:
+            self.actindex = [0, 1, 2, 3]  #Represent (-1, 0), (1, 0), (0, -1), (0, 1)
+            self.act = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        else:
+            self.actindex = [0, 1, 2, 3, 4, 5, 6, 7] #Represent (-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)
+            self.act = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        
+        
+        for st in statelist:
+            for a_id in self.actindex:
+                next_st = tuple(np.array(st) + np.array(self.act[a_id]))
+                if next_st in statelist:
+                    st_id = st[0] * self.rows + st[1]
+                    next_st_id = next_st[0] * self.rows + next_st[1]
+                    self.graph.add_edge(st_id, next_st_id, action = a_id)
+                    
+        print("Successfully Get NexworkX Graph")
+        
+    
 
 
 if __name__ == '__main__':
     game = Gridworld(rows=4, cols=4)
+    
+    game_ = GridworldNx(rows = 4, cols = 4)
