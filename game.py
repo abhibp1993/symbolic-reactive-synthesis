@@ -96,6 +96,9 @@ class Game:
             self.trans_validity_formula |= f
 
     def is_valid_state(self, uid):
+        if uid >= 2**self.bits_states:
+            return False
+
         # Construct map of variables to valuation
         uid_dict = self._uid2dict(uid)
 
@@ -109,6 +112,9 @@ class Game:
             raise ValueError("Unknown value")
 
     def is_valid_action(self, aid):
+        if aid >= 2 ** self.bits_actions:
+            return False
+
         # Construct map of variables to valuation
         aid_dict = self._aid2dict(aid)
 
@@ -122,6 +128,9 @@ class Game:
             raise ValueError("Unknown value")
 
     def is_valid_trans(self, uid, aid, vid):
+        if uid * vid * aid >= 2 ** self.bits_trans:
+            return False
+
         # Construct map of variables to valuation
         uid_dict = self._uid2dict(uid, varname="u")
         vid_dict = self._uid2dict(vid, varname="v")
@@ -244,14 +253,14 @@ def demo():
     # Successors
     succ0 = game.succ(0, 0)
     print(f"Expression succ0: {succ0.to_expr()}")
-    print(f"To validate only v0: False and v1: False evaluates succ0 to True, check")
-    print(f"dict: {{'v0': True, 'v1': True}}: succ0(dict) -> "
+    print(f"To validate only vid=0 is successor of uid=0, aid=0, check")
+    print(f"\tdict: {{'v0': True, 'v1': True}}: succ0(dict) -> "
           f"{game.bdd_trans.let({'v0': True, 'v1': True}, succ0).to_expr()}")
-    print(f"dict: {{'v0': True, 'v1': False}}: succ0(dict) -> "
+    print(f"\tdict: {{'v0': True, 'v1': False}}: succ0(dict) -> "
           f"{game.bdd_trans.let({'v0': True, 'v1': False}, succ0).to_expr()}")
-    print(f"dict: {{'v0': False, 'v1': True}}: succ0(dict) -> "
+    print(f"\tdict: {{'v0': False, 'v1': True}}: succ0(dict) -> "
           f"{game.bdd_trans.let({'v0': False, 'v1': True}, succ0).to_expr()}")
-    print(f"dict: {{'v0': False, 'v1': False}}: succ0(dict) -> "
+    print(f"\tdict: {{'v0': False, 'v1': False}}: succ0(dict) -> "
           f"{game.bdd_trans.let({'v0': False, 'v1': False}, succ0).to_expr()}")
 
 
