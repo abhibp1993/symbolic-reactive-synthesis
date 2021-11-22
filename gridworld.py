@@ -1,9 +1,14 @@
-import networkx as nx
+import pickle
 
 import game
 import logging
+import networkx as nx
 import numpy as np
+import os
+
+
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.WARNING)
 
 
 class Gridworld(game.Game):
@@ -19,7 +24,13 @@ class Gridworld(game.Game):
         self._add_gw_trans()
 
     def size(self):
-        pass
+        obj_state = [self.bdd_states, self.bdd_actions, self.bdd_trans]
+        with open("tmp.pkl", "wb") as file:
+            pickle.dump(obj_state, file)
+
+        size = os.path.getsize("tmp.pkl")
+        os.remove("tmp.pkl")
+        return size
 
     def _add_gw_states(self):
         for r in range(self.rows):
@@ -58,40 +69,47 @@ class GridworldNx:
         self._construct_gridworld()
 
     def size(self):
-        pass
+        obj_state = [self.graph]
+        with open("tmp.pkl", "wb") as file:
+            pickle.dump(obj_state, file)
+
+        size = os.path.getsize("tmp.pkl")
+        os.remove("tmp.pkl")
+        return size
 
     def _construct_gridworld(self):
         # Add states
         # Add edges based on connectivity
-        statelist = []
-        for i in range(self.rows):
-            for j in range(self.cols):
-                statelist.append((i, j))
-                st_id = i * self.rows + j
+        state_list = []
+        for r in range(self.rows):
+            for c in range(self.cols):
+                state_list.append((r, c))
+                st_id = r * self.cols + c
                 self.graph.add_node(st_id)
         
         if self.conn == 4:
-            self.actindex = [0, 1, 2, 3]  #Represent (-1, 0), (1, 0), (0, -1), (0, 1)
+            # Represent (-1, 0), (1, 0), (0, -1), (0, 1)
+            act_index = [0, 1, 2, 3]
             self.act = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         else:
-            self.actindex = [0, 1, 2, 3, 4, 5, 6, 7] #Represent (-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)
+            # Represent (-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)
+            act_index = [0, 1, 2, 3, 4, 5, 6, 7]
             self.act = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
         
-        
-        for st in statelist:
-            for a_id in self.actindex:
+        for st in state_list:
+            for a_id in act_index:
                 next_st = tuple(np.array(st) + np.array(self.act[a_id]))
-                if next_st in statelist:
-                    st_id = st[0] * self.rows + st[1]
-                    next_st_id = next_st[0] * self.rows + next_st[1]
-                    self.graph.add_edge(st_id, next_st_id, action = a_id)
+                if next_st in state_list:
+                    st_id = st[0] * self.cols + st[1]
+                    next_st_id = next_st[0] * self.cols + next_st[1]
+                    self.graph.add_edge(st_id, next_st_id, action=a_id)
                     
-        print("Successfully Get NexworkX Graph")
+        logger.info("Successfully Get NetworkX Graph")
         
-    
-
 
 if __name__ == '__main__':
-    game = Gridworld(rows=4, cols=4)
-    
-    game_ = GridworldNx(rows = 4, cols = 4)
+
+    for i in range(2, 20):
+        game_bdd = Gridworld(rows=i, cols=i)
+        game_nx = GridworldNx(rows=i, cols=i)
+        print(f"gw size: {i, i}, BDD size: {game_bdd.size()}, NX size: {game_nx.size()}")
