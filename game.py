@@ -142,10 +142,24 @@ class Game:
             raise ValueError("Unknown value")
 
     def succ(self, uid, aid=None):
-        pass
+        """ Generates formula representing successors of given state and action (if provided).  """
+        trans_dict = self._uid2dict(uid, varname="u")
+        if aid is not None:
+            aid_dict = self._aid2dict(aid, varname="a")
+            trans_dict.update(aid_dict)
+
+        f = self.bdd_trans.let(trans_dict, self.trans_validity_formula)
+        return f
 
     def pred(self, vid, aid=None):
-        pass
+        """ Generates formula representing successors of given state and action (if provided).  """
+        trans_dict = self._uid2dict(vid, varname="v")
+        if aid is not None:
+            aid_dict = self._aid2dict(aid, varname="a")
+            trans_dict.update(aid_dict)
+
+        f = self.bdd_trans.let(trans_dict, self.trans_validity_formula)
+        return f
 
     def _uid2binary(self, uid):
         return format(uid, f"0{self.bits_states}b")
@@ -188,21 +202,58 @@ class Game:
         return dict_
 
 
-if __name__ == '__main__':
-    game = Game(3, 2)
+def demo():
+    # Instantiate game with max number of states and max number of actions
+    game = Game(num_states=4, num_actions=4)
+
+    # Add states to game
     game.add_state(0)
     game.add_state(1)
-    print(f"game.is_valid_state(0)={game.is_valid_state(0)}")
-    print(f"game.is_valid_state(2)={game.is_valid_state(2)}")
     game.add_state(2)
-    print("Added state: 2")
-    print(f"game.is_valid_state(2)={game.is_valid_state(2)}")
 
+    print(f"game.is_valid_state(0): {game.is_valid_state(0)}")
+    print(f"game.is_valid_state(1): {game.is_valid_state(1)}")
+    print(f"game.is_valid_state(4): {game.is_valid_state(4)}")
+    try:
+        print(f"game.is_valid_state(20): {game.is_valid_state(20)}")
+    except AssertionError as err:
+        print("Assertion Error: ", err)
+
+    # Add actions
     game.add_action(0)
     game.add_action(1)
+    game.add_action(2)
 
-    game.add_trans(0, 0, 1)
-    print(f"game.is_valid_trans(0, 0, 1)={game.is_valid_trans(0, 0, 1)}")
-    print(f"game.is_valid_trans(0, 0, 2)={game.is_valid_trans(0, 0, 2)}")
+    print(f"game.is_valid_action(0): {game.is_valid_action(0)}")
+    print(f"game.is_valid_action(1): {game.is_valid_action(1)}")
+    print(f"game.is_valid_action(4): {game.is_valid_action(3)}")
+    try:
+        print(f"game.is_valid_action(20): {game.is_valid_action(20)}")
+    except AssertionError as err:
+        print("Assertion Error: ", err)
+
+    # Add transitions
+    game.add_trans(0, 0, 0)
+    game.add_trans(0, 1, 1)
+    game.add_trans(0, 2, 2)
+
+    print(f"game.is_valid_trans(0, 0, 0): {game.is_valid_trans(0, 0, 0)}")
+    print(f"game.is_valid_trans(0, 1, 1): {game.is_valid_trans(0, 1, 1)}")
+    print(f"game.is_valid_trans(0, 2, 0): {game.is_valid_trans(0, 2, 0)}")
+
+    # Successors
+    succ0 = game.succ(0, 0)
+    print(f"Expression succ0: {succ0.to_expr()}")
+    print(f"To validate only v0: False and v1: False evaluates succ0 to True, check")
+    print(f"dict: {{'v0': True, 'v1': True}}: succ0(dict) -> "
+          f"{game.bdd_trans.let({'v0': True, 'v1': True}, succ0).to_expr()}")
+    print(f"dict: {{'v0': True, 'v1': False}}: succ0(dict) -> "
+          f"{game.bdd_trans.let({'v0': True, 'v1': False}, succ0).to_expr()}")
+    print(f"dict: {{'v0': False, 'v1': True}}: succ0(dict) -> "
+          f"{game.bdd_trans.let({'v0': False, 'v1': True}, succ0).to_expr()}")
+    print(f"dict: {{'v0': False, 'v1': False}}: succ0(dict) -> "
+          f"{game.bdd_trans.let({'v0': False, 'v1': False}, succ0).to_expr()}")
 
 
+if __name__ == '__main__':
+    demo()
