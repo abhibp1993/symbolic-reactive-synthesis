@@ -143,7 +143,7 @@ class GridworldNx:
                 result_set.add(pred)
         return result_set
 
-def Abalysis_nx(rows, cols):
+def Analysis_nx(rows, cols):
     start_time = time.time()
     game_nx = GridworldNx(rows = i, cols = i)
     nx_time = time.time()- start_time
