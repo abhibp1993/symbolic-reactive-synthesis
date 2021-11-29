@@ -12,8 +12,9 @@ import guppy
 
 def gridworld_bdd_profile(nrows, ncols, nactions):
     h = guppy.hpy()
-    lines = str(h.heap())
-    start = time.time()
+    start_mem = h.heap().size
+
+    start_time = time.time()
     bdd = BDD()
 
     bits_states = math.ceil(math.log2(nrows * ncols))
@@ -81,11 +82,12 @@ def gridworld_bdd_profile(nrows, ncols, nactions):
         else:
             trans = trans | bdd.add_expr(f"({expr_n}) | ({expr_e}) | ({expr_s}) | ({expr_w})")
 
-    end = time.time()
-    print(h.heap())
-    runtime_ms = round((end - start) * 1e3, ndigits=4)
+    end_time = time.time()
+    end_mem = h.heap().size
 
-    return runtime_ms
+    runtime_ms = round((end_time - start_time) * 1e3, ndigits=4)
+    runtime_mem = end_mem - start_mem
+    return runtime_ms, runtime_mem
 
 
 if __name__ == '__main__':
@@ -93,8 +95,8 @@ if __name__ == '__main__':
     nactions = 4
     time_bdd = []
     for dim in range(2, 21):
-        time_ms = gridworld_bdd_profile(nrows=dim, ncols=dim, nactions=nactions)
-        print(dim, time_ms)
+        time_ms, mem_bytes = gridworld_bdd_profile(nrows=dim, ncols=dim, nactions=nactions)
+        print(dim, time_ms, mem_bytes)
         time_bdd.append(time_ms)
 
     print(time_bdd)
