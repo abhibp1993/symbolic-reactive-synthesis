@@ -129,6 +129,7 @@ class GridworldNx:
                     break
         result_set = set(result)
         return result_set
+
     def preAll(self, st):
         pre = [pred for pred in self.graph.predecessors(st)]
         result_set = set([])
@@ -152,6 +153,8 @@ def Analysis_nx(rows, cols):
     print(h.heap)
 
     return game_nx
+
+
 if __name__ == '__main__':
 
     for i in range(2, 20):

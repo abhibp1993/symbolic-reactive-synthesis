@@ -27,18 +27,16 @@ class GraphBDD:
         # Initialize state and action bit names
         self.bits_states = math.ceil(math.log2(max_states))
         self.bits_actions = math.ceil(math.log2(max_actions))
-        self.bdd_state_vars = [f'u{i}' for i in range(self.bits_states)]
-        self.bdd_state_vars2 = [f'v{i}' for i in range(self.bits_states)]
-        self.bdd_action_vars = [f'a{i}' for i in range(self.bits_actions)]
+        self.bdd_state_vars = [f'u{i}' for i in range(self.bits_states)] + ["p"]
+        self.bdd_state_vars2 = [f'v{i}' for i in range(self.bits_states)] + ["p'"]
+        self.bdd_action_vars = [f'a{i}' for i in range(self.bits_actions)] + ["p"]
         self.bdd.declare(*self.bdd_state_vars)
         self.bdd.declare(*self.bdd_action_vars)
         self.bdd.declare(*self.bdd_state_vars2)
 
         # BDD functions
-        self.bddf_p1_states = None
-        self.bddf_p2_states = None
-        self.bddf_p1_actions = None
-        self.bddf_p2_actions = None
+        self.bddf_states = None
+        self.bddf_actions = None
         self.bddf_trans = None
 
         # State and transition properties
@@ -46,7 +44,7 @@ class GraphBDD:
         self.action_props = dict()
         self.edge_props = dict()
 
-    def add_state(self, uid, player, udict=None):
+    def add_state(self, uid, udict=None):
         assert uid < self.max_states
 
         # Get binary expression corresponding to uid
@@ -54,12 +52,7 @@ class GraphBDD:
         f = self.bdd.add_expr(uid_expr)
 
         # Update state validity expression
-        if player == 1:
-            self.bddf_p1_states = f if self.bddf_p1_states is None else self.bddf_p1_states | f
-        elif player == 2:
-            self.bddf_p2_states = f if self.bddf_p2_states is None else self.bddf_p2_states | f
-        else:
-            logger.error(f"Player must be 1 or 2.")
+        self.bddf_states = f if self.bddf_states is None else self.bddf_states | f
 
         # Update state properties
         self.state_props[uid] = udict
@@ -67,7 +60,7 @@ class GraphBDD:
         # Increment number of active states
         self.num_states += 1
 
-    def add_action(self, aid, player, adict=None):
+    def add_action(self, aid, adict=None):
         assert aid < self.max_actions
 
         # Get binary expression corresponding to uid
@@ -75,12 +68,7 @@ class GraphBDD:
         f = self.bdd.add_expr(aid_expr)
 
         # Update state validity expression
-        if player == 1:
-            self.bddf_p2_actions = f if self.bddf_p2_actions is None else self.bddf_p2_actions | f
-        elif player == 2:
-            self.bddf_p2_actions = f if self.bddf_p2_actions is None else self.bddf_p2_actions | f
-        else:
-            logger.error(f"Player must be 1 or 2.")
+        self.bddf_actions = f if self.bddf_actions is None else self.bddf_actions | f
 
         # Update state properties
         self.action_props[aid] = adict
@@ -110,7 +98,7 @@ class GraphBDD:
         # Increment number of active transitions
         self.num_trans += 1
 
-    def has_state(self, uid, player=None):
+    def has_state(self, uid):
         # ID cannot be larger than maximum number of states in graph
         if uid >= self.max_states:
             return False
@@ -119,24 +107,17 @@ class GraphBDD:
         uid_dict = util.id2dict(uid, self.bits_states, varname="u")
 
         # Evaluate expression
-        if player is None:
-            val = self.bdd.let(uid_dict, self.bddf_p1_states | self.bddf_p2_states)
-        elif player == 1:
-            val = self.bdd.let(uid_dict, self.bddf_p1_states)
-        elif player == 2:
-            val = self.bdd.let(uid_dict, self.bddf_p2_states)
-        else:
-            raise ValueError("Unknown player")
+        val = self.bdd.let(uid_dict, self.bddf_states)
 
         # Interpret evaluated expression
-        if val.to_expr() == 'FALSE':
+        if val.to_expr() == "FALSE":
             return False
-        elif val.to_expr() == 'TRUE':
+        elif val.to_expr() == "TRUE":
             return True
         else:
-            raise ValueError("Unknown value")
+            raise ValueError(f"Unknown value: {val.to_expr()}")
 
-    def has_action(self, aid, player=None):
+    def has_action(self, aid):
         # ID cannot be larger than maximum number of actions in graph
         if aid >= self.max_actions:
             return False
@@ -145,22 +126,15 @@ class GraphBDD:
         aid_dict = util.id2dict(aid, self.bits_actions, varname="a")
 
         # Evaluate expression
-        if player is None:
-            val = self.bdd.let(aid_dict, self.bddf_p2_actions | self.bddf_p2_actions)
-        elif player == 1:
-            val = self.bdd.let(aid_dict, self.bddf_p2_actions)
-        elif player == 2:
-            val = self.bdd.let(aid_dict, self.bddf_p2_actions)
-        else:
-            raise ValueError("Unknown player")
+        val = self.bdd.let(aid_dict, self.bddf_actions)
 
         # Interpret evaluated expression
-        if val.to_expr() == 'FALSE':
+        if val.to_expr() == "FALSE":
             return False
-        elif val.to_expr() == 'TRUE':
+        elif val.to_expr() == "TRUE":
             return True
         else:
-            raise ValueError("Unknown value")
+            raise ValueError(f"Unknown value: {val.to_expr()}")
 
     def has_trans(self, uid, aid, vid):
         # ID cannot be larger than maximum number of actions in graph
@@ -177,12 +151,12 @@ class GraphBDD:
         val = self.bdd.let(dict_, self.bddf_trans)
 
         # Interpret evaluated expression
-        if val.to_expr() == 'FALSE':
+        if val.to_expr() == "FALSE":
             return False
-        elif val.to_expr() == 'TRUE':
+        elif val.to_expr() == "TRUE":
             return True
         else:
-            raise ValueError("Unknown value")
+            raise ValueError(f"Unknown value: {val.to_expr()}")
 
     def pred(self, vid, aid=None):
         # ID's cannot be larger than maximum states/actions in graph
@@ -265,7 +239,7 @@ class Gridworld(GameBDD):
             pass
         else:
             logger.warning(f"No transitions added. len(actions)={len(self.actions)}")
-        
+
     def _uid2cell(self, uid):
         return divmod(uid, self.ncols)
 
@@ -290,21 +264,24 @@ def demo_igraph():
     # IJCAI extension (arxiv) example. Inference graph.
     igraph = GraphBDD(max_states=4, max_actions=9)
 
-    igraph.add_state(uid=0, player=1)
-    igraph.add_state(uid=1, player=1)
-    igraph.add_state(uid=2, player=1)
-    igraph.add_state(uid=3, player=1)
+    # All states are correspond to P2's information state.
+    igraph.add_state(uid=0)
+    igraph.add_state(uid=1)
+    igraph.add_state(uid=2)
+    igraph.add_state(uid=3)
 
-    igraph.add_action(aid=0, player=1, adict={"name": "N"})
-    igraph.add_action(aid=1, player=1, adict={"name": "E"})
-    igraph.add_action(aid=2, player=1, adict={"name": "S"})
-    igraph.add_action(aid=3, player=1, adict={"name": "W"})
-    igraph.add_action(aid=4, player=1, adict={"name": "Cut"})
-    igraph.add_action(aid=5, player=1, adict={"name": "JumpN"})
-    igraph.add_action(aid=6, player=1, adict={"name": "JumpE"})
-    igraph.add_action(aid=7, player=1, adict={"name": "JumpS"})
-    igraph.add_action(aid=8, player=1, adict={"name": "JumpW"})
+    # All actions are P1 actions.
+    igraph.add_action(aid=0, adict={"name": "N"})
+    igraph.add_action(aid=1, adict={"name": "E"})
+    igraph.add_action(aid=2, adict={"name": "S"})
+    igraph.add_action(aid=3, adict={"name": "W"})
+    igraph.add_action(aid=4, adict={"name": "Cut"})
+    igraph.add_action(aid=5, adict={"name": "JumpN"})
+    igraph.add_action(aid=6, adict={"name": "JumpE"})
+    igraph.add_action(aid=7, adict={"name": "JumpS"})
+    igraph.add_action(aid=8, adict={"name": "JumpW"})
 
+    # Transition function of inference graph
     igraph.add_trans(uid=0, aid=0, vid=0)
     igraph.add_trans(uid=0, aid=1, vid=0)
     igraph.add_trans(uid=0, aid=2, vid=0)
