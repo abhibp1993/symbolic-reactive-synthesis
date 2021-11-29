@@ -1,6 +1,6 @@
 import pickle
 
-#import game
+import game
 import logging
 import networkx as nx
 import numpy as np
@@ -99,7 +99,7 @@ class GridworldNx:
             self.act_index = [0, 1, 2, 3, 4, 5, 6, 7]
             self.act = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
-        stlist = list(G.nodes)
+        stlist = list(self.graph.nodes)
         for st in stlist:
             r, c, p = util.uid2cell(st, self.gw_dim)
             for a_id in self.act_index:
@@ -107,7 +107,7 @@ class GridworldNx:
                 next_st = tuple(np.array(gw_st) + np.array(self.act[a_id]))
                 if self.in_Gridworld(next_st):
                     p_ = (p+1)%2
-                    next_st_id = util.cell2uid(next_st[0], next_st[1], p_)
+                    next_st_id = util.cell2uid(next_st[0], next_st[1], p_, self.gw_dim)
                     self.graph.add_edge(st_id, next_st_id, action=a_id)
                     
         logger.info("Successfully Get NetworkX Graph")
@@ -144,27 +144,31 @@ class GridworldNx:
                 result_set.add(pred)
         return result_set
 
-def Analysis_nx(rows, cols):
-    start_time = time.time()
-    game_nx = GridworldNx(rows = i, cols = i)
-    nx_time = time.time()- start_time
-    print("--- %s seconds ---" % (nx_time))
+def Analysis_nx(i):
     h = hpy()
-    print(h.heap)
+    start_mem = h.heap().size
+    start_time = time.time()
+    
+    game_nx = GridworldNx(rows = i, cols = i)
 
-<<<<<<< HEAD
-    return game_nx
-
-=======
-    return nx_time
+    end_time = time.time()
+    end_mem = h.heap.size()
+#    print("--- %s seconds ---" % (nx_time))
+    
+#    print(h.heap)
+    runtime_ms = round((end_time - start_time) * 1e3, ndigits=4)
+    runtime_mem = end_mem - start_mem
+#    runtime_mem = 0
+    return runtime_ms, runtime_mem
 
 def main_nx():
     time_nx_list = []
     for i in range(2, 10):
-        nx_time = Analysis_nx(rows=i, cols=i)
+        nx_time, nx_mem = Analysis_nx(i)
+        print(i, nx_time, nx_mem)
         time_nx_list.append(nx_time)
     return time_nx_list
->>>>>>> main
+
 
 if __name__ == '__main__':
 
