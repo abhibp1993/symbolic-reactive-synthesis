@@ -152,12 +152,24 @@ def Analysis_nx(rows, cols):
     h = hpy()
     print(h.heap)
 
+<<<<<<< HEAD
     return game_nx
 
+=======
+    return nx_time
+
+def main_nx():
+    time_nx_list = []
+    for i in range(2, 10):
+        nx_time = Analysis_nx(rows=i, cols=i)
+        time_nx_list.append(nx_time)
+    return time_nx_list
+>>>>>>> main
 
 if __name__ == '__main__':
 
-    for i in range(2, 20):
-#s        game_bdd = Gridworld(rows=i, cols=i)
-        game_nx = Analysis_nx(rows=i, cols=i)
+#    for i in range(2, 20):
+#        game_bdd = Gridworld(rows=i, cols=i)
+#        nx_time = Analysis_nx(rows=i, cols=i)
 #        print(f"gw size: {i, i}, BDD size: {game_bdd.size()}, NX size: {game_nx.size()}")
+    time_nx_list = main_nx()
