@@ -19,3 +19,11 @@ def id2dict(id, num_bits, varname="u"):
         else:
             dict_[f"{varname}{i}"] = False
     return dict_
+
+
+def uid2cell(uid, gw_dim):
+    return divmod(uid, gw_dim[1])
+
+
+def cell2uid(r, c, gw_dim):
+    return r * gw_dim[1] + c
