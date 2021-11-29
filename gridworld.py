@@ -152,7 +152,7 @@ def Analysis_nx(i):
     game_nx = GridworldNx(rows = i, cols = i)
 
     end_time = time.time()
-    end_mem = h.heap.size()
+    end_mem = h.heap().size
 #    print("--- %s seconds ---" % (nx_time))
     
 #    print(h.heap)
