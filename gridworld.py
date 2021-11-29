@@ -89,15 +89,15 @@ class GridworldNx:
         
         if self.conn == 4:
             # Represent (-1, 0), (1, 0), (0, -1), (0, 1)
-            act_index = [0, 1, 2, 3]
+            self.act_index = [0, 1, 2, 3]
             self.act = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         else:
             # Represent (-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)
-            act_index = [0, 1, 2, 3, 4, 5, 6, 7]
+            self.act_index = [0, 1, 2, 3, 4, 5, 6, 7]
             self.act = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
         
         for st in state_list:
-            for a_id in act_index:
+            for a_id in self.act_index:
                 next_st = tuple(np.array(st) + np.array(self.act[a_id]))
                 if next_st in state_list:
                     st_id = st[0] * self.cols + st[1]
@@ -106,7 +106,31 @@ class GridworldNx:
                     
         logger.info("Successfully Get NetworkX Graph")
         
-
+    def preExist(self, st):
+        pre = [pred for pred in self.graph.predecessors(st)]
+        result = []
+        for pred in pre:
+            edge_dict = self.graph[pred][st]
+            for i in edge_dict.keys():
+                act = self.graph[pred][st][i]
+                if act in self.act_index:    #Modify here to distinguish between P1 and P2
+                    result.append(pred)
+                    break
+        result_set = set(result)
+        return result_set
+    def preAll(self, st):
+        pre = [pred for pred in self.graph.predecessors(st)]
+        result_set = set([])
+        for pred in pre:
+            edge_dict = self.graph[pred][st]
+            actset = set([])
+            for i in edge_dict.keys():
+                act = self.graph[pred][st][i]
+                if act in self.act_index:  #Modify here to distinguish between P1 and P2
+                    actset.add(act)
+            if actset == set(self.act_index):
+                result_set.add(pred)
+        return result_set
 if __name__ == '__main__':
 
     for i in range(2, 20):
