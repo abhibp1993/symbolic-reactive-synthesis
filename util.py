@@ -22,8 +22,29 @@ def id2dict(id, num_bits, varname="u"):
 
 
 def uid2cell(uid, gw_dim):
-    return divmod(uid, gw_dim[1])
+    p, residue = divmod(uid, gw_dim[0] * gw_dim[1])
+    c, r = divmod(residue, gw_dim[0])
+    return r, c, p
 
 
-def cell2uid(r, c, gw_dim):
-    return r * gw_dim[1] + c
+def cell2uid(r, c, p, gw_dim):
+    return (p * gw_dim[0] * gw_dim[1]) + (c * gw_dim[0]) + r
+
+
+if __name__ == '__main__':
+    idx = list()
+    for r in range(3):
+        for c in range(3):
+            for p in range(2):
+                print(cell2uid(r, c, p, (3, 3)))
+                idx.append(cell2uid(r, c, p, (3, 3)))
+    idx.sort()
+    print(idx)
+
+    cells = list()
+    for i in range(18):
+        print(uid2cell(i, (3, 3)))
+        cells.append(uid2cell(i, (3, 3)))
+    cells.sort()
+    print(cells)
+
