@@ -258,8 +258,14 @@ class Gridworld(GameBDD):
             self.add_action(i, player=2, adict={"name": self.actions[i]["name"]})
 
     def _add_gw_trans(self):
-        pass
-
+        # TODO.
+        if len(self.actions) == 4:
+            pass
+        elif len(self.actions) == 8:
+            pass
+        else:
+            logger.warning(f"No transitions added. len(actions)={len(self.actions)}")
+        
     def _uid2cell(self, uid):
         return divmod(uid, self.ncols)
 
