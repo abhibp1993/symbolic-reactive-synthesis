@@ -1,3 +1,4 @@
+import itertools
 import pickle
 
 import game
@@ -8,6 +9,10 @@ import os
 import util
 import time
 from guppy import hpy
+import matplotlib.pyplot as plt
+import guppy
+from dd import BDD
+import math
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING)
@@ -144,6 +149,7 @@ class GridworldNx:
                 result_set.add(pred)
         return result_set
 
+
 def Analysis_nx(i):
     h = hpy()
     start_mem = h.heap().size
@@ -156,24 +162,133 @@ def Analysis_nx(i):
 #    print("--- %s seconds ---" % (nx_time))
     
 #    print(h.heap)
-    runtime_ms = round((end_time - start_time) * 1e3, ndigits=4)
+    runtime_ms = round((end_time - start_time) * 1e6, ndigits=4)
     runtime_mem = end_mem - start_mem
 #    runtime_mem = 0
     return runtime_ms, runtime_mem
 
+
 def main_nx():
     time_nx_list = []
-    for i in range(2, 10):
+    mem_nx_list = []
+    for i in range(2, 21):
         nx_time, nx_mem = Analysis_nx(i)
         print(i, nx_time, nx_mem)
         time_nx_list.append(nx_time)
+        mem_nx_list.append(nx_mem)
+    print(mem_nx_list)
     return time_nx_list
 
 
-if __name__ == '__main__':
+def gridworld_bdd_profile(nrows, ncols, nactions):
+    h = guppy.hpy()
+    start_mem = h.heap().size
 
-#    for i in range(2, 20):
-#        game_bdd = Gridworld(rows=i, cols=i)
-#        nx_time = Analysis_nx(rows=i, cols=i)
-#        print(f"gw size: {i, i}, BDD size: {game_bdd.size()}, NX size: {game_nx.size()}")
-    time_nx_list = main_nx()
+    start_time = time.time()
+    bdd = BDD()
+
+    bits_states = math.ceil(math.log2(nrows * ncols))
+    bits_actions = math.ceil(math.log2(nactions))
+
+    bdd_state_vars_u = [f'u{i}' for i in range(bits_states)] + ["p"]
+    bdd_state_vars_v = [f'v{i}' for i in range(bits_states)] + ["p"]
+    bdd_action_vars = [f'a{i}' for i in range(bits_actions)] + ["p"]
+
+    bdd.declare(*bdd_state_vars_u)
+    bdd.declare(*bdd_state_vars_v)
+    bdd.declare(*bdd_action_vars)
+
+    # Add states
+    states = None
+    for i in range(nrows * ncols * 2):
+        if states is None:
+            states = bdd.add_expr(util.id2expr(i, bits_states, 'u'))
+        else:
+            states = states | bdd.add_expr(f"({util.id2expr(i, bits_states, 'u')})")
+
+    # Add transitions
+    trans = None
+    for r, c, p in itertools.product(range(nrows), range(ncols), range(2)):
+        uid = util.cell2uid(r, c, p, (nrows, ncols))
+
+        # Action: N
+        aid = 1
+        nr, nc = r, min(c + 1, ncols)
+        np = (p + 1) % 2
+        vid = util.cell2uid(nr, nc, np, (nrows, ncols))
+        expr_n = " & ".join([util.id2expr(uid, bits_states, "u"),
+                             util.id2expr(aid, bits_actions, "a"),
+                             util.id2expr(vid, bits_states, "v")])
+
+        # Action: E
+        aid = 1
+        nr, nc = min(r + 1, nrows), c
+        np = (p + 1) % 2
+        vid = util.cell2uid(nr, nc, np, (nrows, ncols))
+        expr_e = " & ".join([util.id2expr(uid, bits_states, "u"),
+                             util.id2expr(aid, bits_actions, "a"),
+                             util.id2expr(vid, bits_states, "v")])
+
+        # Action: S
+        aid = 1
+        nr, nc = r, max(c - 1, 0)
+        np = (p + 1) % 2
+        vid = util.cell2uid(nr, nc, np, (nrows, ncols))
+        expr_s = " & ".join([util.id2expr(uid, bits_states, "u"),
+                             util.id2expr(aid, bits_actions, "a"),
+                             util.id2expr(vid, bits_states, "v")])
+
+        # Action: W
+        aid = 1
+        nr, nc = max(r - 1, 0), c
+        np = (p + 1) % 2
+        vid = util.cell2uid(nr, nc, np, (nrows, ncols))
+        expr_w = " & ".join([util.id2expr(uid, bits_states, "u"),
+                             util.id2expr(aid, bits_actions, "a"),
+                             util.id2expr(vid, bits_states, "v")])
+
+        if trans is None:
+            trans = bdd.add_expr(f"({expr_n}) | ({expr_e}) | ({expr_s}) | ({expr_w})")
+        else:
+            trans = trans | bdd.add_expr(f"({expr_n}) | ({expr_e}) | ({expr_s}) | ({expr_w})")
+
+    end_time = time.time()
+    end_mem = h.heap().size
+
+    runtime_us = round((end_time - start_time) * 1e6, ndigits=4)
+    runtime_mem = end_mem - start_mem
+
+    print(f"count(states): {bdd.count(states)}, count(trans): {bdd.count(trans)}")
+    return runtime_us, runtime_mem
+
+
+if __name__ == '__main__':
+    # time_nx_list = main_nx()
+    #
+    # nrows, ncols = (5, 5)
+    # nactions = 4
+    # time_bdd = []
+    # mem_bdd = []
+    # for dim in range(2, 21):
+    #     time_ms, mem_bytes = gridworld_bdd_profile(nrows=dim, ncols=dim, nactions=nactions)
+    #     print(dim, time_ms, mem_bytes)
+    #     time_bdd.append(time_ms)
+    #     mem_bdd.append(mem_bytes)
+    #
+    # print(mem_bdd)
+    # print(time_bdd)
+    # print(time_nx_list)
+
+    time_bdd = [31520.8435, 33964.8724, 52021.9803, 102000.4749, 180000.5436, 237999.6777, 233875.5131, 391831.6364, 475086.689, 560718.5364, 755488.6341, 902945.9953, 1071426.3916, 1184113.0257, 1186952.8294, 1749562.9787, 2001583.3378, 2160105.7053, 2436623.8117]
+    time_nx = [0.0, 0.0, 0.0, 2000.5703, 9003.6392, 11968.1358, 10999.918, 14027.1187, 13999.7005, 13988.4949, 17018.0798, 17998.6954, 19170.5227, 21030.9029, 23966.3124, 26030.0636, 27160.4061, 28635.025, 33996.8204]
+    mem_bdd = [152413, 390500, 379370, 1428338, 2657458, 3195705, 2197712, 6316873, 7298030, 8263547, 13181456, 14649926, 17649199, 22773829, 13044388, 28544302, 30977404, 35756449, 46079999]
+    mem_nx = [6220, 15748, 32956, 58292, 87092, 128354, 170772, 217783, 283372, 346652, 412712, 484824, 591200, 685464, 776824, 874488, 978456, 1144048, 1279064]
+
+    plt.figure(0)
+    plt.scatter(list(range(2, 21)), time_bdd)
+    plt.scatter(list(range(2, 21)), time_nx)
+
+    plt.figure(1)
+    plt.scatter(list(range(2, 21)), mem_bdd)
+    plt.scatter(list(range(2, 21)), mem_nx)
+    plt.show()

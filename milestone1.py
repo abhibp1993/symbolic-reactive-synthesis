@@ -87,6 +87,8 @@ def gridworld_bdd_profile(nrows, ncols, nactions):
 
     runtime_ms = round((end_time - start_time) * 1e3, ndigits=4)
     runtime_mem = end_mem - start_mem
+
+    print(f"count(states): {bdd.count(states)}, count(trans): {bdd.count(trans)}")
     return runtime_ms, runtime_mem
 
 
@@ -96,7 +98,7 @@ if __name__ == '__main__':
     time_bdd = []
     for dim in range(2, 21):
         time_ms, mem_bytes = gridworld_bdd_profile(nrows=dim, ncols=dim, nactions=nactions)
-        print(dim, time_ms, mem_bytes)
+        print(f"dim:{dim}, time:{time_ms} ms, {mem_bytes} bytes")
         time_bdd.append(time_ms)
 
     print(time_bdd)
