@@ -1,11 +1,14 @@
+import logging
+import util
+
+logger = logging.getLogger(__name__)
+
 try:
     from dd.cudd import BDD
+    logger.info("Using dd.CUDD package")
 except ImportError:
     from dd import BDD
-import itertools
-import logging
-import math
-import util
+    logger.info("Using dd python package")
 
 
 class IdGen:
@@ -193,14 +196,19 @@ def product(game: GameBDD, igraph: GraphBDD):
     hypergame = GameBDD()
 
     # Construct hypergame BDD bit names from game and inference graph names
-    state_bit_names = []
-    action_bit_names = []
-    bit_names = []
-    hypergame.init_bdd_vars(bit_names)
+    game_bdd_vars_states = game.bdd_vars_states
+    game_bdd_vars_actions = game.bdd_vars_actions
+    igraph_bdd_vars_states = igraph.bdd_vars_states
+    igraph_bdd_vars_actions = igraph.bdd_vars_actions
+    assert len(set.intersection(set(game_bdd_vars_states), set(igraph_bdd_vars_states))) == 0
+    assert game_bdd_vars_actions == igraph_bdd_vars_actions
+
+    hg_bdd_vars_states = game_bdd_vars_states + igraph_bdd_vars_states
+    hg_bdd_vars_actions = game_bdd_vars_actions
+    hypergame.init_bdd_vars(bdd_vars_states=hg_bdd_vars_states, bdd_vars_actions=hg_bdd_vars_actions)
 
     # Add states
-    # TODO. The following will need renaming of variables.
-    # hg_bddf_state = game.bddf_states & igraph.bddf_states
+    hg_bddf_state = game.bddf_states & igraph.bddf_states
 
     # Add transitions
     # TODO. Think how to represent this.
