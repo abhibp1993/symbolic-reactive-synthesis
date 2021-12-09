@@ -1,3 +1,34 @@
+def id2bin(val, n):
+    return format(val, f"0{n}b")
+
+
+def bin2id(val):
+    pass
+
+
+def bin2expr(val, variables):
+    """
+    Converts binary value to binary expression.
+
+    :param val: (list) binary
+    :param variables:
+    :return:
+    """
+    assert len(val) == len(variables)
+
+    formula_list = []
+    for idx in range(len(variables)):
+        if val[idx] == 0:
+            formula_list.append(f"~{variables[idx]}")
+        elif val[idx] == 1:
+            formula_list.append(f"{variables[idx]}")
+        else:
+            formula_list.append(f"TRUE")
+
+    formula = " & ".join(formula_list)
+    return formula
+
+
 def id2binary(id, num_bits):
     return format(id, f"0{num_bits}b")
 
