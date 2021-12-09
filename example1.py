@@ -59,29 +59,29 @@ class GameAction(Action):
         sid = util.bin2id(binary[k:])
         return player, sid
 
-#
-# class IGraphState(State):
-#     def __init__(self, name):
-#         super(IGraphState, self).__init__(name)
-#
-#     def to_binary(self, k, n):
-#         """
-#         Representation: n-bits are state id.
-#             [b_{n-1}, ..., b0]
-#         """
-#         binary = util.id2bin(self.id, n)
-#         return [int(bit) for bit in binary]
-#
-#     @staticmethod
-#     def from_binary(binary, k, n):
-#         """
-#         Representation: First k-bits are player bits, following n-bits are state id.
-#             [pb_{k-1}, ..., pb_0, b_{n-1}, ..., b0]
-#         """
-#         assert len(binary) == k + n
-#         player = util.bin2id(binary[:k])
-#         sid = util.bin2id(binary[k:])
-#         return player, sid
+
+class IGraphState(State):
+    def __init__(self, name):
+        super(IGraphState, self).__init__(name)
+
+    def to_binary(self, k, n):
+        """
+        Representation: n-bits are state id.
+            [b_{n-1}, ..., b0]
+        """
+        binary = util.id2bin(self.id, n)
+        return [int(bit) for bit in binary]
+
+    @staticmethod
+    def from_binary(binary, k, n):
+        """
+        Representation: First k-bits are player bits, following n-bits are state id.
+            [pb_{k-1}, ..., pb_0, b_{n-1}, ..., b0]
+        """
+        assert len(binary) == k + n
+        player = util.bin2id(binary[:k])
+        sid = util.bin2id(binary[k:])
+        return player, sid
 
 
 def construct_game(bdd):
@@ -118,24 +118,29 @@ def construct_game(bdd):
     return g, g_states, g_actions
 
 
-# def construct_igraph(bdd, game_actions):
-#     g = GraphBDD(bdd)
-#     g.declare(max_states=2, max_actions=2, var_action="b", var_state="i", var_state_prime="j")
-#
-#     g_states = [
-#         IGraphState(name="i0"),
-#         IGraphState(name="i1")
-#     ]
-#
-#     g_actions = [act for act in game_actions if act.player == 0]
-#
-#     for state in g_states:
-#         g.add_state(state)
-#
-#     for act in g_actions:
-#         g.add_action(act)
-#
-#     return g, g_states, g_actions
+def construct_igraph(bdd, game_actions):
+    g = GraphBDD(bdd)
+    g.declare(max_states=2, max_actions=2, var_action="b", var_state="i", var_state_prime="j")
+
+    g_states = [
+        IGraphState(name="i0"),
+        IGraphState(name="i1")
+    ]
+
+    g_actions = [act for act in game_actions if act.player == 0]
+
+    for state in g_states:
+        g.add_state(state)
+
+    for act in g_actions:
+        g.add_action(act)
+
+    g.add_trans(g_states[0], g_actions[0], g_states[1])
+    g.add_trans(g_states[0], g_actions[1], g_states[0])
+    g.add_trans(g_states[1], g_actions[0], g_states[1])
+    g.add_trans(g_states[1], g_actions[1], g_states[1])
+
+    return g, g_states, g_actions
 
 
 if __name__ == '__main__':
@@ -146,6 +151,6 @@ if __name__ == '__main__':
     game, game_states, game_actions = construct_game(bdd)
 
     # Inference graph object
-    # igraph, igraph_states, igraph_actions = construct_igraph(bdd, game_actions)
+    igraph, igraph_states, igraph_actions = construct_igraph(bdd, game_actions)
 
 
