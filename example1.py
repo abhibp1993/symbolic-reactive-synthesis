@@ -86,7 +86,8 @@ class IGraphState(State):
 
 def construct_game(bdd):
     g = GameBDD(bdd)
-    g.declare(max_states=4, max_actions=4, var_action="a", var_state="u", var_state_prime="v")
+    g.declare(max_states=4, max_actions=4, var_action="a", var_state="u", var_state_prime="v", nbits_state_p=1,
+              nbits_action_p=1)
 
     g_states = []
     for i in range(4):
@@ -120,7 +121,8 @@ def construct_game(bdd):
 
 def construct_igraph(bdd, game_actions):
     g = GraphBDD(bdd)
-    g.declare(max_states=2, max_actions=2, var_action="b", var_state="i", var_state_prime="j")
+    g.declare(max_states=2, max_actions=2, var_action="b", var_state="i", var_state_prime="j", nbits_state_p=0,
+              nbits_action_p=1)
 
     g_states = [
         IGraphState(name="i0"),
@@ -153,4 +155,5 @@ if __name__ == '__main__':
     # Inference graph object
     igraph, igraph_states, igraph_actions = construct_igraph(bdd, game_actions)
 
-
+    # Product computation
+    product(bdd, game, igraph)

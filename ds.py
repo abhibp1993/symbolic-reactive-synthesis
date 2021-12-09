@@ -114,12 +114,12 @@ class GraphBDD:
         self.num_actions = 0
         self.num_trans = 0
 
-    def declare(self, max_states, max_actions, var_state, var_state_prime, var_action):
+    def declare(self, max_states, max_actions, var_state, var_state_prime, var_action, nbits_state_p, nbits_action_p):
         # Compute bits needed
         self.bdd_states_n = math.ceil(math.log2(max_states))
-        self.bdd_states_k = 1
+        self.bdd_states_k = nbits_state_p
         self.bdd_actions_n = math.ceil(math.log2(max_actions))
-        self.bdd_actions_k = 1
+        self.bdd_actions_k = nbits_action_p
 
         # Configure variables, generate variable names
         self.bddv_state = var_state
@@ -144,11 +144,9 @@ class GraphBDD:
         # Construct formula for state
         u_binary = u.to_binary(n=self.bdd_states_n, k=self.bdd_states_k)
         u_f_str = util.bin2expr(u_binary, self.bddv_state_vars)
-        print(u_f_str)
 
         # Update state formula
         u_formula = self.bdd.add_expr(u_f_str)
-        print(u_formula.to_expr())
         self.bddf_state = u_formula if self.bddf_state is None else self.bddf_state | u_formula
 
         # Update state count
@@ -268,9 +266,33 @@ class GameBDD(GraphBDD):
         self.num_states += 1
 
 
-class HypergameBDD(GameBDD):
+class HypergameBDD:
     def __init__(self, bdd):
-        super(HypergameBDD, self).__init__(bdd)
+        self.bdd = bdd
+
+        self.bdd_states_n = 0       # Num(bits) to represent state id
+        self.bdd_states_k = 0       # Num(bits) to represent state player
+        self.bdd_actions_n = 0      # Num(bits) to represent action id
+        self.bdd_actions_k = 0      # Num(bits) to represent action player
+
+        self.bddv_state = None      # bit-varname for state
+        self.bddv_state2 = None     # bit-varname for state (primed)
+        self.bddv_action = None     # bit-varname for action (primed)
+        self.bddv_state_vars = []
+        self.bddv_action_vars = []
+        self.bddv_trans_vars = []
+
+        self.bddf_state = None  # state validity formula
+        self.bddf_action = None  # action validity formula
+        self.bddf_trans = None  # trans validity formula
+
+        # Book keeping
+        self.num_states = 0
+        self.num_actions = 0
+        self.num_trans = 0
+
+    def declare(self, game: GameBDD, igraph: GraphBDD):
+        pass
 
 
 class SW:
@@ -283,5 +305,5 @@ class DASW:
         pass
 
 
-def product(game, igraph):
-    pass
+def product(bdd: BDD, game: GameBDD, igraph: GraphBDD):
+    print(f"bdd.vars: ", bdd.vars)
