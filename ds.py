@@ -320,6 +320,7 @@ class SW:
         self.hg = hg
         self.bdd = hg.bdd
         self.p1_win_states = self.bdd.false
+        self.p2_win_states = self.bdd.false
     
     def solve(self):
         # Get final states
@@ -373,6 +374,7 @@ class SW:
             z = z | pre1 | pre2 | final
 
         self.p1_win_states = z
+        self.p2_win_states = self.hg.bddf_state & ~self.p1_win_states
 
 
 class DASW:
