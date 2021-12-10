@@ -285,6 +285,7 @@ class HypergameBDD:
         self.bddf_state = None  # state validity formula
         self.bddf_action = None  # action validity formula
         self.bddf_trans = None  # trans validity formula
+        self.bddf_final = None
 
         # Book keeping
         self.num_states = 0
@@ -312,39 +313,58 @@ class HypergameBDD:
 
 
 class SW:
-    def __init__(self, bdd):
-        pass
+    def __init__(self, hg: HypergameBDD):
+        self.hg = hg
+        self.bdd = hg.bdd
+        self.p1_win_states = self.bdd.false
     
-    def least_point_computation(self, bdd):
-        
-        target = bdd.add_expr()
-        
-        transitions = bdd.bddf_trans
+    def least_point_computation(self):
+        # Get final states
+        final = self.hg.bddf_final
 
-        q = bdd.false #Start from false
-        qold = None
-        prime = {}  #Construct the corresponging relations between u and v
+        # Initialize loop variables
+        z = self.bdd.false                              # Represents states currently labeled as winning for P1
+        y = None                                        # Intermediate loop variable
 
-        qvars = {} #The element should be the v variables
-        q1avars = {} #The element should be the action variable for P1
-        q2avars = {} #The element should be the action variable for P2
-        P1 = bdd.add_expr("pa0")
-        P1S = bdd.add_expr("pu0")
-        P2 = bdd.add_expr("pb0")
-        P2S = bdd.add_expr("pv0")
-        while q!= qold:
-            qold = q
-            next_q = bdd.let(prime, q)
-            u1 = transitions & next_q & P1 & P1S  #This is from P1's perspective
-            u2 = transitions & next_q & P2 & P2S  #This is from P2's perspective
-            pred1 = bdd.quantify(qvars, u1, forall = False) #This should return in the form (u, a)
-            pred2 = bdd.quantify(qvars, u2, forall = False)  #This should return in the form (u, a)
-            ##Transfer pred1 and pred2 to state only form
-            pred1_u = bdd.quantify(q1avars, pred1, forall = False) #This should return only state u
-            pred2_u = bdd.quantify(q2avars, pred2, forall = True)  #This should return only state u
-            q = q | pred1_u | pred2_u | target
-        return q
-    
+        # prime variables
+        prime_subs = dict()                             # Construct the corresponding relations between u and v
+        v_vars = set()                                  # The element should be the v variables
+        a1_vars = set()                                 # The element should be the action variable for P1
+        a2_vars = set()                                 # The element should be the action variable for P2
+
+        pa0 = self.bdd.add_expr("pa0")
+        pu0 = self.bdd.add_expr("pu0")
+        pb0 = self.bdd.add_expr("pb0")
+        pv0 = self.bdd.add_expr("pv0")
+
+        while z != y:
+            # Update loop variable
+            y = z
+
+            # Rename variables in z to make them target
+            #   u_{} -> v_{}, i_{} -> j_{}
+            next_q = self.bdd.let(prime_subs, z)
+
+            # Pre1: {s \in S1 | \exists a \in A1: T(s, a) \in Y}
+            u1 = self.hg.bddf_trans & next_q & pa0 & pu0
+            pre1 = self.bdd.quantify(v_vars, u1, forall=False)
+
+            # Pre2: {s \in S2 | \forall a \in A2: T(s, a) \in Y}
+            u2 = self.hg.bddf_trans & next_q & pb0 & pv0
+            pre2 = self.bdd.quantify(v_vars, u2, forall=False)
+
+            # Quantify pre1, pre2 to represent states
+            #   Since pre1: S x A1 -> {T, F}, pre2: S x A2 -> {T, F}
+            pre1 = self.bdd.quantify(a1_vars, pre1, forall=False)
+            pre2 = self.bdd.quantify(a2_vars, pre2, forall=True)
+
+            # Update winning states
+            #   Now, pre1: S -> {T, F} and pre2: S -> {T, F}
+            z = z | pre1 | pre2 | final
+
+        return z
+
+
 class DASW:
     def __init__(self, bdd):
         pass
