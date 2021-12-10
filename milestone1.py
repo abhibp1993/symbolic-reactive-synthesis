@@ -89,7 +89,7 @@ def gridworld_bdd_profile(nrows, ncols, nactions):
     runtime_mem = end_mem - start_mem
 
     print(f"count(states): {bdd.count(states)}, count(trans): {bdd.count(trans)}")
-    return runtime_ms, runtime_mem
+    return runtime_ms, runtime_mem, bdd
 
 
 if __name__ == '__main__':
