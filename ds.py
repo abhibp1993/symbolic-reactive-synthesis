@@ -357,16 +357,16 @@ class SW:
 
             # Pre1: {s \in S1 | \exists a \in A1: T(s, a) \in Y}
             u1 = self.hg.bddf_trans & next_q & pa0 & pu0        # TODO: Check for correct use of pa0, pb0
-            pre1 = self.bdd.quantify(v_vars, u1, forall=False)
+            pre1 = self.bdd.quantify(u1, v_vars, forall=False)
 
             # Pre2: {s \in S2 | \forall a \in A2: T(s, a) \in Y}
             u2 = self.hg.bddf_trans & next_q & pb0 & pv0        # TODO: Check for correct use of pb0, pv0
-            pre2 = self.bdd.quantify(v_vars, u2, forall=False)
+            pre2 = self.bdd.quantify(u2, v_vars, forall=False)
 
             # Quantify pre1, pre2 to represent states
             #   Since pre1: S x A1 -> {T, F}, pre2: S x A2 -> {T, F}
-            pre1 = self.bdd.quantify(a1_vars, pre1, forall=False)
-            pre2 = self.bdd.quantify(a2_vars, pre2, forall=True)
+            pre1 = self.bdd.quantify(pre1, a1_vars, forall=False)
+            pre2 = self.bdd.quantify(pre2, a2_vars, forall=True)
 
             # Update winning states
             #   Now, pre1: S -> {T, F} and pre2: S -> {T, F}
