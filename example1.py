@@ -121,8 +121,8 @@ def construct_game(bdd):
 
 def construct_igraph(bdd, game_actions):
     g = GraphBDD(bdd)
-    g.declare(max_states=2, max_actions=2, var_action="b", var_state="i", var_state_prime="j", nbits_state_p=0,
-              nbits_action_p=1)
+    g.declare(max_states=2, max_actions=2, var_action="b", var_state="i", var_state_prime="j",
+              nbits_state_p=0, nbits_action_p=1)
 
     g_states = [
         IGraphState(name="i0"),
@@ -156,4 +156,5 @@ if __name__ == '__main__':
     igraph, igraph_states, igraph_actions = construct_igraph(bdd, game_actions)
 
     # Product computation
-    product(bdd, game, igraph)
+    hypergame = product(bdd, game, igraph)
+    print("ok")
