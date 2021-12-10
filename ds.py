@@ -436,25 +436,21 @@ class DASW:
         return z
     
     def dapre11(self, u):
-        # FIXME: Following two lines not needed.
-        # v1 = self.hg.bddf_state & ~self.pu0
-        # u1 = (self.hg.bddf_trans & v1) & next_q & ~self.pa0           # The transitions start from V1 and ends in U
         next_q = self.bdd.let(self.prime, u)
         u1 = (self.hg.bddf_trans & ~self.pu0) & next_q & ~self.pa0      # The transitions start from V1 and ends in U
         pre1 = self.bdd.quantify(u1, self.v_vars, forall=False)         # Quantify over
         dapre11 = self.bdd.quantify(pre1, self.a1_vars, forall=False)
         return dapre11
     
-    def dapre21(self, U):
-        # V1 = self.bdd.bddf_state & pu0
-        next_q = self.bdd.let(self.prime, U)
+    def dapre21(self, u):
+        next_q = self.bdd.let(self.prime, u)
         u1 = (self.hg.bddf_trans & ~self.pu0) & next_q & ~self.pa0
         pre1 = self.bdd.quantify(u1, self.v_vars, forall=False)         # Quantify over
         dapre21 = self.bdd.quantify(pre1, self.a1_vars, forall=True)
         return dapre21
         
-    def dapre2(self, U):
-        next_q = self.bdd.let(self.prime, U)
+    def dapre2(self, u):
+        next_q = self.bdd.let(self.prime, u)
         u2 = (self.hg.bddf_trans & self.win2) & next_q & self.pa0
         pre2 = self.bdd.quantify(u2, self.v_vars, forall=False)
         dapre2 = self.bdd.quantify(pre2, self.a2_vars, forall=True)
