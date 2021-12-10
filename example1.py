@@ -164,5 +164,9 @@ if __name__ == '__main__':
     sw = SW(hg=hypergame)
     sw.solve()
 
+    # Compute deceptive almost-sure winning states of hypergame
+    dasw = DASW(hg=hypergame)
+    dasw.solve()
+    
     # Complete notification
     print("ok")

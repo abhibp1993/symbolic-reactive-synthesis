@@ -357,11 +357,11 @@ class SW:
             next_q = self.bdd.let(prime_subs, z)
 
             # Pre1: {s \in S1 | \exists a \in A1: T(s, a) \in Y}
-            u1 = self.hg.bddf_trans & next_q & pa0 & pu0        # TODO: Check for correct use of pa0, pb0
+            u1 = self.hg.bddf_trans & next_q & ~pa0
             pre1 = self.bdd.quantify(u1, v_vars, forall=False)
 
             # Pre2: {s \in S2 | \forall a \in A2: T(s, a) \in Y}
-            u2 = self.hg.bddf_trans & next_q & pb0 & pv0        # TODO: Check for correct use of pb0, pv0
+            u2 = self.hg.bddf_trans & next_q & pa0
             pre2 = self.bdd.quantify(u2, v_vars, forall=False)
 
             # Quantify pre1, pre2 to represent states
@@ -378,79 +378,88 @@ class SW:
 
 
 class DASW:
-    def __init__(self, bdd):
-        self.bdd = bdd
-        
+    def __init__(self, hg: HypergameBDD):
+        self.hg = hg
+        self.bdd = hg.bdd
+        self.p1_win_states = self.bdd.false
+        self.p2_win_states = self.bdd.false
+
+        self.prime = {**{u: u.replace('u', 'v') for u in self.bdd.vars
+                      if ('u' in u and u.replace('u', 'v') in self.bdd.vars)},
+                      **{i: i.replace('i', 'j') for i in self.bdd.vars
+                      if ('i' in i and i.replace('i', 'j') in self.bdd.vars)},
+                      **{a: a.replace('a', 'b') for a in self.bdd.vars
+                      if ('a' in a and a.replace('a', 'b') in self.bdd.vars)}}
+        self.pu0 = self.bdd.add_expr("pu0")
+        self.pa0 = self.bdd.add_expr("pa0")
+        self.v_vars = {var for var in self.bdd.vars if ('v' in var or 'j' in var)}
+        self.a1_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
+        self.a2_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
+
+        # Solve for P2's M(v)
+        sw = SW(hg)
+        sw.solve()
+        self.win2 = sw.p2_win_states
+
     def solve(self):
-        z = ...  #Give the initial Z here
+        z = self.hg.bddf_final
+        y = None
+        icount = 0
+        while z != y:
+            y = z
+            c = self.safe_2(self.hg.bddf_state & ~z)
+            z = self.safe_1(self.hg.bddf_state & ~c)
+            icount += 1
 
-        V = self.bdd.bddf_state
+        print("icount(dasw): ", icount)
+        self.p1_win_states = z
+        self.p2_win_states = self.hg.bddf_state & ~self.p1_win_states
 
+    def safe_1(self, u):
+        z = u
         y = None
         while z != y:
             y = z
-            c = self.safe_2(V & ~z)
-            z = self.safe_1(V & ~c)
-        return z
-    
-    def safe_1(self, U):
-        z = U
-        y = None
-        while z != y:
-            y = z
-            w1 = self.DAPRE11(z)
-            w2 = self.DAPRE2(z)
+            w1 = self.dapre11(z)
+            w2 = self.dapre2(z)
             z = y & (w1 | w2)
         return z
     
-    def safe_2(self, U):
-        z = U
+    def safe_2(self, u):
+        z = u
         y = None
         while z != y:
             y = z
-            w1 = self.DAPRE21(z)
-            w2 = self.DAPRE2(z)
+            w1 = self.dapre21(z)
+            w2 = self.dapre2(z)
             z = y & (w1 | w2)
         return z
     
-    def DAPRE11(self, U):
-        prime = ...   #Please define prime here. I am not 100% sure about the data structure
-        pu0 = self.bdd.add_expr("pu0")
-        pa0 = self.bdd.add_expr("pa0")
-        v_vars = ...  #Please also define the v_vars here.
-        a1_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
-        V1 = self.bdd.bddf_state & pu0
-        next_q = self.bdd.let(prime, U)
-        u1 = (self.bdd.bddf_trans & V1) & next_q & pu0 & pa0  #The transitions start from V1 and ends in U
-        pre1 = self.bdd.quantify(u1, v_vars, forall = False)  #Quantify over 
-        Dapre11 = self.bdd.quantify(pre1, a1_vars, forall = False)
-        return Dapre11
+    def dapre11(self, u):
+        # FIXME: Following two lines not needed.
+        # v1 = self.hg.bddf_state & ~self.pu0
+        # u1 = (self.hg.bddf_trans & v1) & next_q & ~self.pa0           # The transitions start from V1 and ends in U
+        next_q = self.bdd.let(self.prime, u)
+        u1 = (self.hg.bddf_trans & ~self.pu0) & next_q & ~self.pa0      # The transitions start from V1 and ends in U
+        pre1 = self.bdd.quantify(u1, self.v_vars, forall=False)         # Quantify over
+        dapre11 = self.bdd.quantify(pre1, self.a1_vars, forall=False)
+        return dapre11
     
-    def DAPRE21(self, U):
-        prime = ...   #I think the prime part should be the same for these modules
-        pu0 = self.bdd.add_expr("pu0")
-        pa0 = self.bdd.add_expr("pa0")
-        v_vars = ...  #Please also define the v_vars here.
-        a1_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
-        V1 = self.bdd.bddf_state & pu0
-        next_q = self.bdd.let(prime, U)
-        u1 = (self.bdd.bddf_trans & V1) & next_q & pu0 & pa0
-        pre1 = self.bdd.quantify(u1, v_vars, forall = False)  #Quantify over 
-        Dapre21 = self.bdd.quantify(pre1, a1_vars, forall = True)
-        return Dapre21
+    def dapre21(self, U):
+        # V1 = self.bdd.bddf_state & pu0
+        next_q = self.bdd.let(self.prime, U)
+        u1 = (self.hg.bddf_trans & ~self.pu0) & next_q & ~self.pa0
+        pre1 = self.bdd.quantify(u1, self.v_vars, forall=False)         # Quantify over
+        dapre21 = self.bdd.quantify(pre1, self.a1_vars, forall=True)
+        return dapre21
         
-    def DAPRE2(self, U):
-        prime = ...  #I think the prime part should be the same for these modules
-        win2 = ...   #We need to obtain the SW region for P2 here. Will you include SW in this DASW class?
-        pb0 = self.bdd.add_expr("pb0")
-        pv0 = self.bdd.add_expr("pv0")
-        v_vars = ... #Define the v variables here
-        a2_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
-        next_q = self.bdd.let(prime, U)
-        u2 = (self.bdd.bddf_trans & win2) & next_q & pb0 & pv0
-        pre2 = self.bdd.quanfify(u2, v_vars, forall = False)
-        Dapre2 = self.bdd.quantify(pre2, a2_vars, forall = True)
-        return Dapre2
+    def dapre2(self, U):
+        next_q = self.bdd.let(self.prime, U)
+        u2 = (self.hg.bddf_trans & self.win2) & next_q & self.pa0
+        pre2 = self.bdd.quantify(u2, self.v_vars, forall=False)
+        dapre2 = self.bdd.quantify(pre2, self.a2_vars, forall=True)
+        return dapre2
+
 
 def product(bdd: BDD, game: GameBDD, igraph: GraphBDD):
     print(bdd.vars)
