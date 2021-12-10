@@ -302,6 +302,9 @@ class HypergameBDD:
         # Transition validity
         self.bddf_trans = game.bddf_trans & igraph.bddf_trans & self.bdd.add_expr("pa0 <-> pb0")
 
+        # Final states
+        self.bddf_final = game.bddf_final
+
     def has_state(self, s, q):
         pass
 
@@ -318,7 +321,7 @@ class SW:
         self.bdd = hg.bdd
         self.p1_win_states = self.bdd.false
     
-    def least_point_computation(self):
+    def solve(self):
         # Get final states
         final = self.hg.bddf_final
 
