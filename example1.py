@@ -116,6 +116,8 @@ def construct_game(bdd):
     g.add_trans(g_states[3], g_actions[0], g_states[2])
     g.add_trans(g_states[3], g_actions[1], g_states[2])
 
+    g.make_final(g_states[0])
+
     return g, g_states, g_actions
 
 
