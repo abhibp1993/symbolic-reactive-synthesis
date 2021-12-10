@@ -298,8 +298,37 @@ class HypergameBDD:
 class SW:
     def __init__(self, bdd):
         pass
+    
+    def least_point_computation(self, bdd):
+        
+        target = bdd.add_expr()
+        
+        transitions = bdd.bddf_trans
 
+        q = bdd.false #Start from false
+        qold = None
+        prime = {}  #Construct the corresponging relations between u and v
 
+        qvars = {} #The element should be the v variables
+        q1avars = {} #The element should be the action variable for P1
+        q2avars = {} #The element should be the action variable for P2
+        P1 = bdd.add_expr("pa0")
+        P1S = bdd.add_expr("pu0")
+        P2 = bdd.add_expr("pb0")
+        P2S = bdd.add_expr("pv0")
+        while q!= qold:
+            qold = q
+            next_q = bdd.let(prime, q)
+            u1 = transitions & next_q & P1 & P1S  #This is from P1's perspective
+            u2 = transitions & next_q & P2 & P2S  #This is from P2's perspective
+            pred1 = bdd.quantify(qvars, u1, forall = False) #This should return in the form (u, a)
+            pred2 = bdd.quantify(qvars, u2, forall = False)  #This should return in the form (u, a)
+            ##Transfer pred1 and pred2 to state only form
+            pred1_u = bdd.quantify(q1avars, pred1, forall = False) #This should return only state u
+            pred2_u = bdd.quantify(q2avars, pred2, forall = True)  #This should return only state u
+            q = q | pred1_u | pred2_u | target
+        return q
+    
 class DASW:
     def __init__(self, bdd):
         pass
