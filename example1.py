@@ -6,6 +6,9 @@ Modification:
     * Adversarial player (P2) is denoted as Player 1
 """
 from ds import *
+import guppy
+import time
+import milestone1
 
 
 class GameState(State):
@@ -146,27 +149,99 @@ def construct_igraph(bdd, game_actions):
 
     return g, g_states, g_actions
 
+def time_and_memory_profile(nrows, ncols, nactions):
+    runtime1_ms, runmem1_bytes, bdd = milestone1.gridworld_bdd_profile(nrows=nrows, ncols=ncols, nactions=nactions)
+    
+    end_mem1 = h.heap().size()
+    game, game_states, game_actions = construct_game(bdd)   #Replace this with the construct function, if needed
+    end_time2 = time.time()
+    end_mem2 = h.heap().size
+    runtime2_ms = round((end_time2 - end_time1) * 1e3, ndigits=4)
+    runmem2_bytes = end_mem2 - end_mem1
+    
+    # Inference graph object
+    igraph, igraph_states, igraph_actions = construct_igraph(bdd, game_actions)  #Replace this with the construct function, if needed
+    end_time3 = time.time()
+    end_mem3 = h.heap().size
+    runtime3_ms = round((end_time3 - end_time2) * 1e3, ndigits=4)
+    runmem3_bytes = end_mem3 - end_mem2
 
+    # Product computation
+    hypergame = product(bdd, game, igraph)  #Replace this with the construct function, if needed
+    end_time4 = time.time()
+    end_mem4 = h.heap().size
+    runtime4_ms = round((end_time4 - end_time3) * 1e3, ndigits=4)
+    runmem4_bytes = end_mem4 - end_mem3
+
+    # Compute sure winning states of hypergame
+    sw = SW(hg=hypergame)    #Replace this with the construct function, if needed
+    sw.solve()
+    end_time5 = time.time()
+    end_mem5 = h.heap().size
+    runtime5_ms = round((end_time5 - end_time4) * 1e3, ndigits=4)
+    runmem5_bytes = end_mem5 - end_mem4
+
+    # Compute deceptive almost-sure winning states of hypergame
+    dasw = DASW(hg=hypergame)   #Replace this with the construct function, if needed
+    dasw.solve()
+    end_time6 = time.time()
+    end_mem6 = h.heap().size
+    runtime6_ms = round((end_time6 - end_time5) * 1e3, ndigits=4)
+    runmem6_bytes = end_mem6 - end_mem5
+    
+    timeconsuming = [runtime1_ms, runtime2_ms, runtime3_ms, runtime4_ms, runtime5_ms, runtime6_ms]
+    spaceconsuming = [runmem1_bytes, runmem2_bytes, runmem3_bytes, runmem4_bytes, runmem5_bytes, runmem6_bytes]
+    
+    #Return the list of time and space consuming for [BDD, game, igraph, hypergame, SW, DASW]
+    return timeconsuming, spaceconsuming
+    
 if __name__ == '__main__':
+    start_time = time.time()
+    h = guppy.hpy()
+    start_mem = h.heap().size
     # Define BDD
     bdd = BDD()
+    end_time1 = time.time()
+    end_mem1 = h.heap().size
+    runtime1_ms = round((end_time1 - start_time) * 1e3, ndigits=4)
+    runmem1_bytes = end_mem1 - start_mem
 
     # Game object
     game, game_states, game_actions = construct_game(bdd)
+    end_time2 = time.time()
+    end_mem2 = h.heap().size
+    runtime2_ms = round((end_time2 - end_time1) * 1e3, ndigits=4)
+    runmem2_bytes = end_mem2 - end_mem1
 
     # Inference graph object
     igraph, igraph_states, igraph_actions = construct_igraph(bdd, game_actions)
+    end_time3 = time.time()
+    end_mem3 = h.heap().size
+    runtime3_ms = round((end_time3 - end_time2) * 1e3, ndigits=4)
+    runmem3_bytes = end_mem3 - end_mem2
 
     # Product computation
     hypergame = product(bdd, game, igraph)
+    end_time4 = time.time()
+    end_mem4 = h.heap().size
+    runtime4_ms = round((end_time4 - end_time3) * 1e3, ndigits=4)
+    runmem4_bytes = end_mem4 - end_mem3
 
     # Compute sure winning states of hypergame
     sw = SW(hg=hypergame)
     sw.solve()
+    end_time5 = time.time()
+    end_mem5 = h.heap().size
+    runtime5_ms = round((end_time5 - end_time4) * 1e3, ndigits=4)
+    runmem5_bytes = end_mem5 - end_mem4
 
     # Compute deceptive almost-sure winning states of hypergame
     dasw = DASW(hg=hypergame)
     dasw.solve()
+    end_time6 = time.time()
+    end_mem6 = h.heap().size
+    runtime6_ms = round((end_time6 - end_time5) * 1e3, ndigits=4)
+    runmem6_bytes = end_mem6 - end_mem5
     
     # Complete notification
     print("ok")
