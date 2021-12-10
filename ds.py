@@ -330,12 +330,12 @@ class SW:
         y = None                                        # Intermediate loop variable
 
         # Construct mapping between state, action variables and their primed versions
-        prime_subs = {u: u.replace('u', 'v') for u in self.bdd.vars
-                      if ('u' in u and u.replace('u', 'v') in self.bdd.vars)} | \
-                     {i: i.replace('i', 'j') for i in self.bdd.vars
-                      if ('i' in i and i.replace('i', 'j') in self.bdd.vars)} | \
-                     {a: a.replace('a', 'b') for a in self.bdd.vars
-                      if ('a' in a and a.replace('a', 'b') in self.bdd.vars)}
+        prime_subs = {**{u: u.replace('u', 'v') for u in self.bdd.vars
+                      if ('u' in u and u.replace('u', 'v') in self.bdd.vars)},
+                      **{i: i.replace('i', 'j') for i in self.bdd.vars
+                      if ('i' in i and i.replace('i', 'j') in self.bdd.vars)},
+                      **{a: a.replace('a', 'b') for a in self.bdd.vars
+                      if ('a' in a and a.replace('a', 'b') in self.bdd.vars)}}
 
         # Variables for quantification
         v_vars = {var for var in self.bdd.vars if ('v' in var or 'j' in var)}
