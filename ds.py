@@ -379,8 +379,78 @@ class SW:
 
 class DASW:
     def __init__(self, bdd):
-        pass
+        self.bdd = bdd
+        
+    def solve(self):
+        z = ...  #Give the initial Z here
 
+        V = self.bdd.bddf_state
+
+        y = None
+        while z != y:
+            y = z
+            c = self.safe_2(V & ~z)
+            z = self.safe_1(V & ~c)
+        return z
+    
+    def safe_1(self, U):
+        z = U
+        y = None
+        while z != y:
+            y = z
+            w1 = self.DAPRE11(z)
+            w2 = self.DAPRE2(z)
+            z = y & (w1 | w2)
+        return z
+    
+    def safe_2(self, U):
+        z = U
+        y = None
+        while z != y:
+            y = z
+            w1 = self.DAPRE21(z)
+            w2 = self.DAPRE2(z)
+            z = y & (w1 | w2)
+        return z
+    
+    def DAPRE11(self, U):
+        prime = ...   #Please define prime here. I am not 100% sure about the data structure
+        pu0 = self.bdd.add_expr("pu0")
+        pa0 = self.bdd.add_expr("pa0")
+        v_vars = ...  #Please also define the v_vars here.
+        a1_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
+        V1 = self.bdd.bddf_state & pu0
+        next_q = self.bdd.let(prime, U)
+        u1 = (self.bdd.bddf_trans & V1) & next_q & pu0 & pa0  #The transitions start from V1 and ends in U
+        pre1 = self.bdd.quantify(u1, v_vars, forall = False)  #Quantify over 
+        Dapre11 = self.bdd.quantify(pre1, a1_vars, forall = False)
+        return Dapre11
+    
+    def DAPRE21(self, U):
+        prime = ...   #I think the prime part should be the same for these modules
+        pu0 = self.bdd.add_expr("pu0")
+        pa0 = self.bdd.add_expr("pa0")
+        v_vars = ...  #Please also define the v_vars here.
+        a1_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
+        V1 = self.bdd.bddf_state & pu0
+        next_q = self.bdd.let(prime, U)
+        u1 = (self.bdd.bddf_trans & V1) & next_q & pu0 & pa0
+        pre1 = self.bdd.quantify(u1, v_vars, forall = False)  #Quantify over 
+        Dapre21 = self.bdd.quantify(pre1, a1_vars, forall = True)
+        return Dapre21
+        
+    def DAPRE2(self, U):
+        prime = ...  #I think the prime part should be the same for these modules
+        win2 = ...   #We need to obtain the SW region for P2 here. Will you include SW in this DASW class?
+        pb0 = self.bdd.add_expr("pb0")
+        pv0 = self.bdd.add_expr("pv0")
+        v_vars = ... #Define the v variables here
+        a2_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
+        next_q = self.bdd.let(prime, U)
+        u2 = (self.bdd.bddf_trans & win2) & next_q & pb0 & pv0
+        pre2 = self.bdd.quanfify(u2, v_vars, forall = False)
+        Dapre2 = self.bdd.quantify(pre2, a2_vars, forall = True)
+        return Dapre2
 
 def product(bdd: BDD, game: GameBDD, igraph: GraphBDD):
     print(bdd.vars)
