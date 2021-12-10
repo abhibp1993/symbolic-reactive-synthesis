@@ -267,7 +267,7 @@ class GameBDD(GraphBDD):
 
 
 class HypergameBDD:
-    def __init__(self, bdd):
+    def __init__(self, bdd: BDD):
         self.bdd = bdd
 
         self.bdd_states_n = 0       # Num(bits) to represent state id
@@ -292,6 +292,22 @@ class HypergameBDD:
         self.num_trans = 0
 
     def declare(self, game: GameBDD, igraph: GraphBDD):
+        # State validity function
+        self.bddf_state = game.bddf_state & igraph.bddf_state
+
+        # Action validity
+        self.bddf_action = game.bddf_action
+
+        # Transition validity
+        self.bddf_trans = game.bddf_trans & igraph.bddf_trans & self.bdd.add_expr("pa0 <-> pb0")
+
+    def has_state(self, s, q):
+        pass
+
+    def has_action(self, a):
+        pass
+
+    def has_trans(self, s, p, a, t, q):
         pass
 
 
@@ -306,4 +322,7 @@ class DASW:
 
 
 def product(bdd: BDD, game: GameBDD, igraph: GraphBDD):
-    print(f"bdd.vars: ", bdd.vars)
+    print(bdd.vars)
+    hg = HypergameBDD(bdd)
+    hg.declare(game, igraph)
+    return hg
