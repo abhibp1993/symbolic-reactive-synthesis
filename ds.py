@@ -329,11 +329,18 @@ class SW:
         z = self.bdd.false                              # Represents states currently labeled as winning for P1
         y = None                                        # Intermediate loop variable
 
-        # prime variables
-        prime_subs = dict()                             # Construct the corresponding relations between u and v
-        v_vars = set()                                  # The element should be the v variables
-        a1_vars = set()                                 # The element should be the action variable for P1
-        a2_vars = set()                                 # The element should be the action variable for P2
+        # Construct mapping between state, action variables and their primed versions
+        prime_subs = {u: u.replace('u', 'v') for u in self.bdd.vars
+                      if ('u' in u and u.replace('u', 'v') in self.bdd.vars)} | \
+                     {i: i.replace('i', 'j') for i in self.bdd.vars
+                      if ('i' in i and i.replace('i', 'j') in self.bdd.vars)} | \
+                     {a: a.replace('a', 'b') for a in self.bdd.vars
+                      if ('a' in a and a.replace('a', 'b') in self.bdd.vars)}
+
+        # Variables for quantification
+        v_vars = {var for var in self.bdd.vars if ('v' in var or 'j' in var)}
+        a1_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
+        a2_vars = {var for var in self.bdd.vars if ('a' in var and 'p' not in var)}
 
         pa0 = self.bdd.add_expr("pa0")
         pu0 = self.bdd.add_expr("pu0")
@@ -349,11 +356,11 @@ class SW:
             next_q = self.bdd.let(prime_subs, z)
 
             # Pre1: {s \in S1 | \exists a \in A1: T(s, a) \in Y}
-            u1 = self.hg.bddf_trans & next_q & pa0 & pu0
+            u1 = self.hg.bddf_trans & next_q & pa0 & pu0        # TODO: Check for correct use of pa0, pb0
             pre1 = self.bdd.quantify(v_vars, u1, forall=False)
 
             # Pre2: {s \in S2 | \forall a \in A2: T(s, a) \in Y}
-            u2 = self.hg.bddf_trans & next_q & pb0 & pv0
+            u2 = self.hg.bddf_trans & next_q & pb0 & pv0        # TODO: Check for correct use of pb0, pv0
             pre2 = self.bdd.quantify(v_vars, u2, forall=False)
 
             # Quantify pre1, pre2 to represent states
@@ -365,7 +372,7 @@ class SW:
             #   Now, pre1: S -> {T, F} and pre2: S -> {T, F}
             z = z | pre1 | pre2 | final
 
-        return z
+        self.p1_win_states = z
 
 
 class DASW:

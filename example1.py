@@ -157,4 +157,10 @@ if __name__ == '__main__':
 
     # Product computation
     hypergame = product(bdd, game, igraph)
+
+    # Compute sure winning states of hypergame
+    sw = SW(hg=hypergame)
+    sw.solve()
+
+    # Complete notification
     print("ok")
