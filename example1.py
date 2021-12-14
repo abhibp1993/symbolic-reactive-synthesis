@@ -152,6 +152,7 @@ def construct_igraph(bdd, game_actions):
 def time_and_memory_profile(nrows, ncols, nactions):
     runtime1_ms, runmem1_bytes, bdd = milestone1.gridworld_bdd_profile(nrows=nrows, ncols=ncols, nactions=nactions)
     
+    h = hpy()
     end_mem1 = h.heap().size()
     game, game_states, game_actions = construct_game(bdd)   #Replace this with the construct function, if needed
     end_time2 = time.time()
