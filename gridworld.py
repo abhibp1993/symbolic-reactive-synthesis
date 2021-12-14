@@ -165,8 +165,53 @@ def Analysis_nx(i):
     runtime_ms = round((end_time - start_time) * 1e6, ndigits=4)
     runtime_mem = end_mem - start_mem
 #    runtime_mem = 0
-    return runtime_ms, runtime_mem
+    return runtime_ms, runtime_mem, game_nx
 
+def gridworld_nx_profile(i):
+    runtime_ms, runtime_mem, nx_gridworld = Analysis_nx(i)
+    
+    h = hpy()
+    
+    end_mem1 = h.heap().size()
+    ...   #Fill in how we construct the game using networkx
+    end_time2 = time.time()
+    end_mem2 = h.heap().size
+    runtime2_ms = round((end_time2 - end_time1) * 1e3, ndigits=4)
+    runmem2_bytes = end_mem2 - end_mem1
+    
+    # Inference graph object
+    ... #Fill in how we construct igraph using networkx
+    end_time3 = time.time()
+    end_mem3 = h.heap().size
+    runtime3_ms = round((end_time3 - end_time2) * 1e3, ndigits=4)
+    runmem3_bytes = end_mem3 - end_mem2
+
+    # Product computation
+    ... #Fill in how we construct hypergame
+    end_time4 = time.time()
+    end_mem4 = h.heap().size
+    runtime4_ms = round((end_time4 - end_time3) * 1e3, ndigits=4)
+    runmem4_bytes = end_mem4 - end_mem3
+
+    # Compute sure winning states of hypergame
+    ... #Fill in the sure winning region in networkx gridworlf
+    sw.solve()
+    end_time5 = time.time()
+    end_mem5 = h.heap().size
+    runtime5_ms = round((end_time5 - end_time4) * 1e3, ndigits=4)
+    runmem5_bytes = end_mem5 - end_mem4
+
+    # Compute deceptive almost-sure winning states of hypergame
+    
+    dasw = ...   #Fill in the DASW function for gridworld.
+    end_time6 = time.time()
+    end_mem6 = h.heap().size
+    runtime6_ms = round((end_time6 - end_time5) * 1e3, ndigits=4)
+    runmem6_bytes = end_mem6 - end_mem5
+    
+    timeconsuming = [runtime1_ms, runtime2_ms, runtime3_ms, runtime4_ms, runtime5_ms, runtime6_ms]
+    spaceconsuming = [runmem1_bytes, runmem2_bytes, runmem3_bytes, runmem4_bytes, runmem5_bytes, runmem6_bytes]
+    
 
 def main_nx():
     time_nx_list = []
