@@ -18,5 +18,5 @@ RUN pip3 install cython && \
     python3 setup.py install --fetch --cudd
 
 RUN pip3 install guppy3
-
+RUN pip3 install jupyterlab
 
