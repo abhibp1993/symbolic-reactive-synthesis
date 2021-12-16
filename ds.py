@@ -415,7 +415,7 @@ class DASW:
             z = self.safe_1(self.hg.bddf_state & ~c)
             icount += 1
 
-        print("icount(dasw): ", icount)
+        # print("icount(dasw): ", icount)
         self.p1_win_states = z
         self.p2_win_states = self.hg.bddf_state & ~self.p1_win_states
 
@@ -477,7 +477,7 @@ class DASW_Nx:
             z = self.safe_1(set(self.hg.nodes()) - c)
             icount += 1
 
-        print("icount(dasw): ", icount)
+        # print("icount(dasw): ", icount)
         self.p1_win_states = z
         self.p2_win_states = set(self.hg.nodes) - self.p1_win_states
 
@@ -524,7 +524,7 @@ class DASW_Nx:
 
 
 def product(bdd: BDD, game: GameBDD, igraph: GraphBDD):
-    print(bdd.vars)
+    # print(bdd.vars)
     hg = HypergameBDD(bdd)
     hg.declare(game, igraph)
     return hg

@@ -1,3 +1,5 @@
+import pickle
+
 from ds import *
 import guppy
 import itertools
@@ -6,7 +8,8 @@ import random
 import time
 
 
-DIM = [d for d in range(5, 20)]
+DIM = [d for d in range(5, 15)]
+NITER = 10
 
 
 class GameState(State):
@@ -268,12 +271,70 @@ def benchmark(dim, niter, type_="symbolic"):
         avg_time_const += time_construction - time_start
         avg_time_solve += time_solution - time_construction
 
-        print(icount, avg_mem_const, avg_mem_solve, avg_time_const, avg_time_solve)
+        # print(icount, avg_mem_const, avg_mem_solve, avg_time_const, avg_time_solve)
 
     return avg_mem_const / niter, avg_mem_solve / niter, avg_time_const / niter, avg_time_solve / niter
 
 
 if __name__ == '__main__':
-    # benchmark(5, 2, "symbolic")
-    benchmark(5, 2, "enumeration")
+    # Symbolic data
+    sym_mem_const = []
+    sym_mem_solve = []
+    sym_mem_total = []
+    sym_time_const = []
+    sym_time_solve = []
+    sym_time_total = []
+
+    for dim in DIM:
+        print(f"processing dim (sym): {dim}")
+        mc, ms, tc, ts = benchmark(dim, niter=NITER, type_="symbolic")
+
+        sym_mem_const.append(mc)
+        sym_mem_solve.append(ms)
+        sym_mem_total.append(mc + (ms if ms > 0 else 0))
+        sym_time_const.append(tc)
+        sym_time_solve.append(ts)
+        sym_time_total.append(tc + ts)
+
+    # Enumeration data
+    enum_mem_const = []
+    enum_mem_solve = []
+    enum_mem_total = []
+    enum_time_const = []
+    enum_time_solve = []
+    enum_time_total = []
+
+    for dim in DIM:
+        print(f"processing dim (enum): {dim}")
+        mc, ms, tc, ts = benchmark(dim, niter=NITER, type_="enumeration")
+
+        enum_mem_const.append(mc)
+        enum_mem_solve.append(ms)
+        enum_mem_total.append(mc + (ms if ms > 0 else 0))
+        enum_time_const.append(tc)
+        enum_time_solve.append(ts)
+        enum_time_total.append(tc + ts)
+
+    store_data = {
+        "DIM": DIM,
+        "NITER": NITER,
+
+        "sym_mem_const": sym_mem_const,
+        "sym_mem_solve": sym_mem_solve,
+        "sym_mem_total": sym_mem_total,
+        "sym_time_const": sym_time_const,
+        "sym_time_solve": sym_time_solve,
+        "sym_time_total": sym_time_total,
+
+        "enum_mem_const": enum_mem_const,
+        "enum_mem_solve": enum_mem_solve,
+        "enum_mem_total": enum_mem_total,
+        "enum_time_const": enum_time_const,
+        "enum_time_solve": enum_time_solve,
+        "enum_time_total": enum_time_total,
+    }
+
+    with open("benchmark.pkl", "wb") as file:
+        pickle.dump(store_data, file)
+
     print("OK")
