@@ -1,6 +1,10 @@
+import itertools
 import logging
 import math
 from abc import abstractmethod
+
+import networkx as nx
+
 import util
 
 try:
@@ -170,7 +174,7 @@ class GraphBDD:
     def add_trans(self, u: State, a: Action, v: State):
         assert self.has_state(u)
         assert self.has_state(v)
-        assert self.has_action(a)
+        assert self.has_action(a), f"action: {a} not in game."
 
         # Construct formula string
         u_binary = u.to_binary(n=self.bdd_states_n, k=self.bdd_states_k)
@@ -457,8 +461,83 @@ class DASW:
         return dapre2
 
 
+class DASW_Nx:
+    def __init__(self, hg: nx.MultiDiGraph):
+        self.hg = hg
+        self.p1_win_states = None
+        self.p2_win_states = None
+
+    def solve(self):
+        z = set(self.hg.final)
+        y = None
+        icount = 0
+        while z != y:
+            y = z
+            c = self.safe_2(set(self.hg.nodes()) - z)
+            z = self.safe_1(set(self.hg.nodes()) - c)
+            icount += 1
+
+        print("icount(dasw): ", icount)
+        self.p1_win_states = z
+        self.p2_win_states = set(self.hg.nodes) - self.p1_win_states
+
+    def safe_1(self, u):
+        z = u
+        y = None
+        while z != y:
+            y = z
+            w1 = self.dapre11(z)
+            w2 = self.dapre2(z)
+            z = set.intersection(y, set.union(w1, w2))
+        return z
+
+    def safe_2(self, u):
+        z = u
+        y = None
+        while z != y:
+            y = z
+            w1 = self.dapre21(z)
+            w2 = self.dapre2(z)
+            z = set.intersection(y, set.union(w1, w2))
+        return z
+
+    def dapre11(self, u):
+        y = set()
+        for s in self.hg.nodes():
+            if s[0].player == 0 and any(t in u for t in self.hg.neighbors(s)):
+                y.add(s)
+        return y
+
+    def dapre21(self, u):
+        y = set()
+        for s in self.hg.nodes():
+            if s[0].player == 0 and all(t in u for t in self.hg.neighbors(s)):
+                y.add(s)
+        return y
+
+    def dapre2(self, u):
+        y = set()
+        for s in self.hg.nodes():
+            if s[0].player == 1 and all(t in u for t in self.hg.neighbors(s)):
+                y.add(s)
+        return y
+
+
 def product(bdd: BDD, game: GameBDD, igraph: GraphBDD):
     print(bdd.vars)
     hg = HypergameBDD(bdd)
     hg.declare(game, igraph)
     return hg
+
+
+def product_nx(game: nx.MultiDiGraph, igraph: nx.MultiDiGraph):
+    prod_graph = nx.MultiDiGraph()
+    states = itertools.product(game.nodes, igraph.nodes)
+    prod_graph.add_nodes_from(states)
+    for u, v, uvdict in game.edges(data=True):
+        for s, t, stdict in igraph.edges(data=True):
+            if uvdict["action"] == stdict["action"]:
+                prod_graph.add_edge((u, s), (v, t), **uvdict)
+
+    prod_graph.final = itertools.product(game.final, igraph.nodes)
+    return prod_graph

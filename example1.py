@@ -149,6 +149,7 @@ def construct_igraph(bdd, game_actions):
 
     return g, g_states, g_actions
 
+
 def time_and_memory_profile(nrows, ncols, nactions):
     runtime1_ms, runmem1_bytes, bdd = milestone1.gridworld_bdd_profile(nrows=nrows, ncols=ncols, nactions=nactions)
     
@@ -195,7 +196,8 @@ def time_and_memory_profile(nrows, ncols, nactions):
     
     #Return the list of time and space consuming for [BDD, game, igraph, hypergame, SW, DASW]
     return timeconsuming, spaceconsuming
-    
+
+
 if __name__ == '__main__':
     start_time = time.time()
     h = guppy.hpy()
