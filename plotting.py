@@ -9,7 +9,7 @@ def compare_mem_const(DIM, sym_mem_const, enum_mem_const):
     plt.xlabel('Gridworld Dimension')
     plt.ylabel('Construction Memory (bytes)')
     plt.legend()
-    plt.show()
+    # plt.show()
     
 def compare_mem_solve(DIM, sym_mem_solve, enum_mem_solve):
     plt.plot(DIM, sym_mem_solve, marker = '.',  markersize = 10, label = 'sym_mem_solve', linestyle = 'solid')
@@ -18,7 +18,7 @@ def compare_mem_solve(DIM, sym_mem_solve, enum_mem_solve):
     plt.xlabel('Gridworld Dimension')
     plt.ylabel('Solving Memory (bytes)')
     plt.legend()
-    plt.show()
+    # plt.show()
     
 def compare_mem_total(DIM, sym_mem_total, enum_mem_total):
     plt.plot(DIM, sym_mem_total, marker = '.',  markersize = 10, label = 'sym_mem_total', linestyle = 'solid')
@@ -27,7 +27,7 @@ def compare_mem_total(DIM, sym_mem_total, enum_mem_total):
     plt.xlabel('Gridworld Dimension')
     plt.ylabel('Total Memory (bytes)')
     plt.legend()
-    plt.show()
+    # plt.show()
     
 def compare_time_const(DIM, sym_time_const, enum_time_const):
     plt.plot(DIM, sym_time_const, marker = '.',  markersize = 10, label = 'sym_time_const', linestyle = 'solid')
@@ -36,7 +36,7 @@ def compare_time_const(DIM, sym_time_const, enum_time_const):
     plt.xlabel('Gridworld Dimension')
     plt.ylabel('Construction Time (ms)')
     plt.legend()
-    plt.show()
+    # plt.show()
     
 def compare_time_solve(DIM, sym_time_solve, enum_time_solve):
     plt.plot(DIM, sym_time_solve, marker = '.',  markersize = 10, label = 'sym_time_solve', linestyle = 'solid')
@@ -45,7 +45,7 @@ def compare_time_solve(DIM, sym_time_solve, enum_time_solve):
     plt.xlabel('Gridworld Dimension')
     plt.ylabel('Solving Time (ms)')
     plt.legend()
-    plt.show()
+    # plt.show()
     
 def compare_time_total(DIM, sym_time_total, enum_time_total):
     plt.plot(DIM, sym_time_total, marker = '.',  markersize = 10, label = 'sym_time_total', linestyle = 'solid')
@@ -54,7 +54,7 @@ def compare_time_total(DIM, sym_time_total, enum_time_total):
     plt.xlabel('Gridworld Dimension')
     plt.ylabel('Total Time (bytes)')
     plt.legend()
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':
@@ -76,17 +76,29 @@ if __name__ == '__main__':
     enum_time_const = data['enum_time_const']
     enum_time_solve = data['enum_time_solve']
     enum_time_total = data['enum_time_total']
-    
+
+    plt.figure(0)
     compare_mem_const(DIM, sym_mem_const, enum_mem_const)
-    
+    plt.savefig('mem_constr.png')
+
+    plt.figure(1)
     compare_mem_solve(DIM, sym_mem_solve, enum_mem_solve)
-    
+    plt.savefig('mem_solve.png')
+
+    plt.figure(2)
     compare_mem_total(DIM, sym_mem_total, enum_mem_total)
-    
+    plt.savefig('mem_total.png')
+
+    plt.figure(3)
     compare_time_const(DIM, sym_time_const, enum_time_const)
-    
+    plt.savefig('time_constr.png')
+
+    plt.figure(4)
     compare_time_solve(DIM, sym_time_solve, enum_time_solve)
-    
+    plt.savefig('time_solve.png')
+
+    plt.figure(5)
     compare_time_total(DIM, sym_time_total, enum_time_total)
+    plt.savefig('time_total.png')
 
-
+    plt.show()
